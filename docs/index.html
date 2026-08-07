@@ -196,7 +196,9 @@
   .day.collapsed .day-events { display: none; }
   @media (max-width: 767px) {
     .day { gap: 0.7rem; }
-    .day-heading { font-size: 1rem; }
+    /* Not a toggle on mobile — drop the affordances so it reads as a label. */
+    .day-heading { font-size: 1rem; cursor: default; }
+    .day-heading:hover { background: none; }
     /* Header slides away on mobile scroll, so drop its offset when hidden. */
     header.header-hidden ~ main { --header-h: 0px; }
   }
@@ -639,7 +641,7 @@
   </div>
   -->
   <footer>
-    <span class="updated">Last Updated: Aug 7, 2026, 2:20 PM · 337 events</span>
+    <span class="updated">Last Updated: Aug 7, 2026, 2:25 PM · 337 events</span>
   </footer>
 </div>
 <script>
@@ -821,11 +823,15 @@
   // Keyed by YYYY-MM-DD so collapse state survives the full re-render that
   // every filter change triggers.
   const collapsedDays = new Set();
+  // Day rails collapse on desktop only — on phones the rail is too easy to hit
+  // by accident while scrolling, so every day stays expanded there. Same
+  // breakpoint as the mobile CSS block.
+  const isMobile = window.matchMedia('(max-width: 767px)');
 
   // Delegated because render() replaces the whole results subtree.
   els.results.addEventListener('click', (ev) => {
     const btn = ev.target.closest('.day-heading');
-    if (!btn) return;
+    if (!btn || isMobile.matches) return;
     const section = btn.closest('.day');
     const collapsed = !collapsedDays.has(btn.dataset.day);
     if (collapsed) collapsedDays.add(btn.dataset.day);
@@ -839,6 +845,10 @@
       window.scrollTo({ top: section.offsetTop - headerH - 12 });
     }
   });
+
+  // Crossing the breakpoint (rotation, resize) re-renders so a day collapsed on
+  // desktop doesn't stay stuck shut with no way to reopen it on mobile.
+  isMobile.addEventListener('change', () => render());
 
   function matchesDate(e, filter) {
     if (!filter) return true;
@@ -954,12 +964,15 @@
 
     let html = '';
     for (const day of days) {
-      const collapsed = collapsedDays.has(day.key);
+      const collapsed = !isMobile.matches && collapsedDays.has(day.key);
       const n = day.events.length;
       html += '<section class="day' + (collapsed ? ' collapsed' : '') + '">'
         + '<h2 class="day-rail">'
         + '<button type="button" class="day-heading" data-day="' + day.key + '"'
-        + ' aria-expanded="' + String(!collapsed) + '">'
+        // disabled keeps it out of the tab order and off the a11y tree as a
+        // control, so mobile users are never offered a toggle that does nothing.
+        + (isMobile.matches ? ' disabled' : ' aria-expanded="' + String(!collapsed) + '"')
+        + '>'
         + dayLabel(day.key)
         + '<span class="day-count">' + n + ' event' + (n === 1 ? '' : 's') + '</span>'
         + '</button>'
