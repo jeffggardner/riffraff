@@ -127,66 +127,34 @@
   }
   body.intro .watermark { opacity: 1; }
   /*
-    CRT power-on. Nothing here touches the wave SVG: its filter stack (four
-    neonGlow applications plus two stdDeviation-80 blurs, under a blend mode)
-    gets rasterised once by iOS WebKit and never refreshed, so animating it —
-    filter OR transform — silently does nothing on iPhone. These are plain
-    divs on their own layers, which is the one thing that reliably animates
-    everywhere.
+    CRT power-on, driven by the wave's own white-hot core band instead of a
+    separate overlay: it snaps open across, blooms outward, then settles into
+    the core line the artwork already draws.
+
+    transform-box: view-box resolves the origin in viewBox units, so 50% 50%
+    is the middle of the 1200x600 canvas — exactly where the core line sits
+    (y=300). Left at the default the origin would key off the group's bounding
+    box, which its heavily transformed <use> children throw way off centre.
   */
-  .crt {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    overflow: hidden;
+  .core-band {
+    transform-box: view-box;
+    transform-origin: 50% 50%;
   }
-  .crt-beam {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 55%;
-    height: 3px;
-    margin-top: -1.5px;
-    opacity: 0;
-    background: linear-gradient(90deg, transparent, #ffffff 18%, #ffffff 82%, transparent);
-    box-shadow: 0 0 22px 5px rgba(255, 255, 255, 0.7);
+  /* Held shut before the power-on so it has something to snap open from. */
+  body.intro .core-band { transform: scaleX(0); }
+  body.powering .core-band {
+    animation: crt-core 1s ease-out both;
+    
   }
-  .crt-bars {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: -100%;
-    height: 300%;
-    opacity: 0;
-    background-image: repeating-linear-gradient(
-      0deg,
-      rgba(0, 212, 255, 0.3) 0 2px,
-      rgba(0, 0, 0, 0) 2px 6px
-    );
-  }
-  body.powering .crt-beam {
-    animation: crt-beam 1s ease-out both;
-    will-change: transform, opacity;
-  }
-  body.powering .crt-bars {
-    animation: crt-bars 1s ease-out both;
-    will-change: transform, opacity;
-  }
-  /* Snap open across, then bloom outward and dissolve. */
-  @keyframes crt-beam {
-    0%   { opacity: 0;    transform: scaleX(0) scaleY(1); }
-    8%   { opacity: 1;    transform: scaleX(0.05) scaleY(1); }
-    24%  { opacity: 1;    transform: scaleX(1) scaleY(1); }
-    42%  { opacity: 0.55; transform: scaleX(1) scaleY(7); }
-    68%  { opacity: 0.18; transform: scaleX(1) scaleY(26); }
-    100% { opacity: 0;    transform: scaleX(1) scaleY(44); }
-  }
-  @keyframes crt-bars {
-    0%   { opacity: 0;    transform: translate3d(0, -22%, 0); }
-    28%  { opacity: 0.75; }
-    85%  { opacity: 0.3; }
-    100% { opacity: 0;    transform: translate3d(0, 22%, 0); }
+  @keyframes crt-core {
+    0%   { opacity: 0;   transform: scaleX(0) scaleY(1); }
+    8%   { opacity: 1;   transform: scaleX(0.05) scaleY(1); }
+    24%  { opacity: 1;   transform: scaleX(1) scaleY(1); }
+    42%  { opacity: 0.6; transform: scaleX(1) scaleY(7); }
+    68%  { opacity: 0.3; transform: scaleX(1) scaleY(20); }
+    88%  { opacity: 0.9; transform: scaleX(1) scaleY(1.4); }
+    /* Lands on the band's resting state so it can't pop when the class drops. */
+    100% { opacity: 1;   transform: scaleX(1) scaleY(1); }
   }
   /* No intro for anyone who asked motion to stop — CSS covers the window
      before the script has run, so it never even starts. */
@@ -195,8 +163,8 @@
     body.intro > header,
     body.intro > main,
     body.intro > .bottom-bar { opacity: 1; }
-    body.powering .crt-beam,
-    body.powering .crt-bars { animation: none; }
+    body.intro .core-band { transform: none; }
+    body.powering .core-band { animation: none; }
   }
   /* preserveAspectRatio="none" scales x and y unequally; without this the
      strokes would smear along with the geometry. */
@@ -299,6 +267,7 @@
     .watermark svg {
       width: 1200px;
       height: 600px;
+      top: 55%;
       max-width: none;
       max-height: none;
       flex-shrink: 0;
@@ -665,7 +634,7 @@
   </g>
 
   <!-- Central Compressed White-Hot Core Band -->
-  <g stroke="url(#coreGrad)" filter="url(#neonGlow)" style="mix-blend-mode: screen;">
+  <g class="core-band" stroke="url(#coreGrad)" filter="url(#neonGlow)" style="mix-blend-mode: screen;">
     <use href="#baseWave2" transform="scale(1, 0.15) translate(0, 1700)" stroke-width="4" opacity="0.9" />
     <use href="#baseWave1" transform="scale(1, -0.1) translate(0, -3300)" stroke-width="6" opacity="1" />
     <!-- Center piercing light line -->
@@ -682,9 +651,7 @@
   <text x="1160" y="560" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="20" font-weight="200" letter-spacing="5" fill="none" stroke="#ffffff" stroke-width="0.75" stroke-dasharray="2 6" text-anchor="end" opacity="0.6" style="mix-blend-mode: overlay; pointer-events: none;">
     riffraff
   </text> -->
-</svg></div>
-<div class="crt" aria-hidden="true"><div class="crt-beam"></div><div class="crt-bars"></div></div>
-<header>
+</svg></div><header>
   <div class="inner">
     <p class="brand">riffraff.show :: Phoenix Area Events</p>
     <h1 style="color: var(--bright-blue)">just us riffraff hanging out</h1>
@@ -756,7 +723,7 @@
   </div>
   -->
   <footer>
-    <span class="updated">Last Updated: Aug 7, 2026, 9:13 PM · 323 events</span>
+    <span class="updated">Last Updated: Aug 7, 2026, 9:23 PM · 323 events</span>
   </footer>
 </div>
 <script>
