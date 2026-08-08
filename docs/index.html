@@ -35,8 +35,9 @@
     border-bottom: 1px solid rgba(255,255,255,0.1);
     position: sticky;
     top: 0;
-    /* Transparent so the wave runs behind the controls. */
-    background-color: transparent;
+    /* Charcoal at 20% opacity — a wash that knocks the wave back behind the
+       controls without hiding it. */
+    background-color: rgba(20,18,16,0.2);
 
     /*
     background-image: linear-gradient(rgba(20,18,16,0.8), rgba(20,18,16,0.92)), url('');
@@ -72,8 +73,10 @@
     gap: 0.6rem;
     align-items: center;
   }
+  /* Controls sit on charcoal so they stay readable over the wave; the header
+     bar around them stays transparent. Selected states keep their amber fill. */
   input[type="search"], select {
-    background: transparent;
+    background: var(--charcoal);
     border: 1px solid rgba(255,255,255,0.15);
     color: var(--offwhite);
     padding: 0.5rem 0.75rem;
@@ -357,7 +360,7 @@
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--amber);
-    background: transparent;
+    background: var(--charcoal);
     border: 1px solid rgba(255,176,0,0.4);
     border-radius: 999px;
     padding: 0.5rem 0.9rem;
@@ -516,7 +519,7 @@
     flex: 1 1 0;
     font-family: 'Inter', system-ui, sans-serif;
     font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
-    color: var(--amber); background: transparent; border: 1px solid rgba(255,176,0,0.4);
+    color: var(--amber); background: var(--charcoal); border: 1px solid rgba(255,176,0,0.4);
     border-radius: 999px; padding: 0.5rem 0.6rem; min-height: 36px; cursor: pointer; white-space: nowrap;
   }
   .tab:hover { background: rgba(255,176,0,0.1); }
@@ -753,7 +756,7 @@
   </div>
   -->
   <footer>
-    <span class="updated">Last Updated: Aug 7, 2026, 7:09 PM · 333 events</span>
+    <span class="updated">Last Updated: Aug 7, 2026, 7:15 PM · 333 events</span>
   </footer>
 </div>
 <script>
