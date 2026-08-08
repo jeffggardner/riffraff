@@ -121,28 +121,54 @@
     transition: opacity 0.45s ease-out;
   }
   body.intro .watermark { opacity: 1; }
+  /*
+    The glitch animates transform ONLY. The wave SVG carries several stacked
+    feGaussianBlurs (one at stdDeviation 80) under a mix-blend-mode parent;
+    animating filter/opacity on it forces that whole blurred stack to re-render
+    every frame, which iOS WebKit resolves by rasterizing once and never
+    updating — the animation silently does nothing on iPhone. Transforms stay
+    on the compositor, so the layer is reused as-is.
+  */
   body.glitching .watermark svg {
-    animation: wm-glitch 0.5s steps(1, end) 2 both;
+    animation: wm-shift 0.5s steps(1, end) 2 both;
+    will-change: transform;
+  }
+  /* Colour and scanline flashes live on this throwaway layer instead, where
+     painting is cheap because there is nothing underneath to re-filter. */
+  .glitch-fx {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    background-color: transparent;
+    background-image: repeating-linear-gradient(
+      0deg,
+      rgba(0, 212, 255, 0.35) 0 2px,
+      rgba(0, 0, 0, 0) 2px 7px
+    );
+  }
+  body.glitching .glitch-fx {
+    animation: wm-fx 0.25s steps(1, end) 4 both;
+    will-change: opacity, transform;
   }
   /* Hard-cut steps rather than eased tweens — a glitch shouldn't ease. */
-  @keyframes wm-glitch {
-    0%   { transform: none; filter: none; }
-    6%   { transform: translate3d(-1.5%, 0, 0) skewX(6deg); filter: hue-rotate(90deg) saturate(3); }
-    12%  { transform: translate3d(2%, -0.6%, 0) scaleY(1.06); filter: brightness(1.6) contrast(1.6); }
-    18%  { transform: none; filter: none; }
-    26%  { transform: translate3d(1.2%, 0.8%, 0) skewX(-9deg); filter: hue-rotate(-70deg) saturate(4); }
-    /* No invert() here on purpose: on a near-black page it reads as a
-       full-screen white strobe. Hue flips give the same jolt safely. */
-    32%  { transform: translate3d(-2.4%, 0, 0) scaleX(1.05); filter: hue-rotate(180deg) saturate(4); }
-    38%  { transform: none; filter: none; }
-    50%  { transform: translate3d(0, 1.4%, 0) scaleY(0.9); filter: brightness(0.4); }
-    56%  { transform: translate3d(-1%, 0, 0); filter: hue-rotate(160deg) saturate(5); }
-    64%  { transform: none; filter: none; }
-    72%  { transform: translate3d(2.6%, -1%, 0) skewX(4deg); filter: contrast(2.4) brightness(1.8); }
-    78%  { transform: none; filter: none; }
-    86%  { transform: translate3d(-0.8%, 0.5%, 0) scaleX(0.98); filter: hue-rotate(45deg); }
-    92%  { transform: none; filter: brightness(1.5); }
-    100% { transform: none; filter: none; }
+  @keyframes wm-shift {
+    0%, 18%, 38%, 64%, 78%, 100% { transform: translate3d(0, 0, 0); }
+    6%   { transform: translate3d(-1.5%, 0, 0) skewX(6deg); }
+    12%  { transform: translate3d(2%, -0.6%, 0) scaleY(1.06); }
+    26%  { transform: translate3d(1.2%, 0.8%, 0) skewX(-9deg); }
+    32%  { transform: translate3d(-2.4%, 0, 0) scaleX(1.05); }
+    50%  { transform: translate3d(0, 1.4%, 0) scaleY(0.9); }
+    56%  { transform: translate3d(-1%, 0, 0); }
+    72%  { transform: translate3d(2.6%, -1%, 0) skewX(4deg); }
+    86%  { transform: translate3d(-0.8%, 0.5%, 0) scaleX(0.98); }
+  }
+  @keyframes wm-fx {
+    0%, 100% { opacity: 0; transform: translate3d(0, 0, 0); background-color: transparent; }
+    18% { opacity: 0.6; transform: translate3d(0, -7%, 0); background-color: rgba(0, 212, 255, 0.16); }
+    40% { opacity: 0; }
+    62% { opacity: 0.45; transform: translate3d(0, 9%, 0); background-color: rgba(255, 122, 0, 0.16); }
+    84% { opacity: 0; }
   }
   /* No intro for anyone who asked motion to stop — CSS covers the window
      before the script has run, so it never even starts. */
@@ -151,7 +177,8 @@
     body.intro > header,
     body.intro > main,
     body.intro > .bottom-bar { opacity: 1; }
-    body.glitching .watermark svg { animation: none; }
+    body.glitching .watermark svg,
+    body.glitching .glitch-fx { animation: none; }
   }
   /* preserveAspectRatio="none" scales x and y unequally; without this the
      strokes would smear along with the geometry. */
@@ -639,7 +666,7 @@
   <text x="1160" y="560" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="20" font-weight="200" letter-spacing="5" fill="none" stroke="#ffffff" stroke-width="0.75" stroke-dasharray="2 6" text-anchor="end" opacity="0.6" style="mix-blend-mode: overlay; pointer-events: none;">
     riffraff
   </text> -->
-</svg></div>
+</svg><div class="glitch-fx" aria-hidden="true"></div></div>
 <header>
   <div class="inner">
     <p class="brand">riffraff.show :: Phoenix Area Events</p>
@@ -712,7 +739,7 @@
   </div>
   -->
   <footer>
-    <span class="updated">Last Updated: Aug 7, 2026, 6:37 PM · 335 events</span>
+    <span class="updated">Last Updated: Aug 7, 2026, 6:44 PM · 335 events</span>
   </footer>
 </div>
 <script>
