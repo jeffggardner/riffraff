@@ -103,6 +103,9 @@
     z-index: 0;
     display: flex;
     align-items: flex-end;
+    /* Centres the wave when it is wider than the viewport, which is the case
+       on mobile where it holds its intrinsic 1200px instead of shrinking. */
+    justify-content: center;
     pointer-events: none;
     mix-blend-mode: screen;
     opacity: 0.95;
@@ -589,6 +592,22 @@
       </feMerge>
     </filter>
 
+    <!-- Core band: the same bloom as neonGlow, but the source is softened
+         first so the band reads as diffuse light instead of a hard line.
+         stdDeviation on "soft" is the knob for how blurred it gets. -->
+    <filter id="coreSoftGlow" x="-20%" y="-50%" width="140%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="soft" />
+      <feGaussianBlur in="soft" stdDeviation="3" result="blur1" />
+      <feGaussianBlur in="soft" stdDeviation="12" result="blur2" />
+      <feGaussianBlur in="soft" stdDeviation="25" result="blur3" />
+      <feMerge>
+        <feMergeNode in="blur3" />
+        <feMergeNode in="blur2" />
+        <feMergeNode in="blur1" />
+        <feMergeNode in="soft" />
+      </feMerge>
+    </filter>
+
     <filter id="heavyAtmosphere" x="-50%" y="-50%" width="200%" height="200%">
       <feGaussianBlur stdDeviation="80" />
     </filter>
@@ -634,7 +653,7 @@
   </g>
 
   <!-- Central Compressed White-Hot Core Band -->
-  <g class="core-band" stroke="url(#coreGrad)" filter="url(#neonGlow)" style="mix-blend-mode: screen;">
+  <g class="core-band" stroke="url(#coreGrad)" filter="url(#coreSoftGlow)" style="mix-blend-mode: screen;">
     <use href="#baseWave2" transform="scale(1, 0.15) translate(0, 1700)" stroke-width="4" opacity="0.9" />
     <use href="#baseWave1" transform="scale(1, -0.1) translate(0, -3300)" stroke-width="6" opacity="1" />
     <!-- Center piercing light line -->
@@ -723,7 +742,7 @@
   </div>
   -->
   <footer>
-    <span class="updated">Last Updated: Aug 7, 2026, 9:23 PM · 323 events</span>
+    <span class="updated">Last Updated: Aug 7, 2026, 9:31 PM · 323 events</span>
   </footer>
 </div>
 <script>
